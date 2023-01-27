@@ -16,9 +16,13 @@ module.exports.addCard = (req, res) => {
 };
 
 module.exports.deleteCardById = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => (card ? res.send(card) : sendCardNotFound(res)))
-    .catch(() => sendServerError(res));
+  if (req.params.cardId.length === 24) {
+    Card.findByIdAndRemove(req.params.cardId)
+      .then((card) => (card ? res.send(card) : sendCardNotFound(res)))
+      .catch(() => sendServerError(res));
+  } else {
+    sendBadRequest(res);
+  }
 };
 
 module.exports.likeCard = (req, res) => {

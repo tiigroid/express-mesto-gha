@@ -4,7 +4,7 @@ const jsonParser = require('body-parser').json();
 const routerUsers = require('./routes/users');
 const routerCards = require('./routes/cards');
 
-const { sendServerError } = require('./utils/errors');
+const { sendPathNotFound } = require('./utils/errors');
 
 const { PORT = 3000 } = process.env;
 
@@ -19,7 +19,7 @@ app.use((req, res, next) => {
 
 app.use('/users', routerUsers);
 app.use('/cards', routerCards);
-app.use('/', (req, res) => sendServerError(res));
+app.use('/', (req, res) => sendPathNotFound(res));
 
 mongoose.set('strictQuery', false);
 mongoose.connect('mongodb://localhost:27017/mestodb');

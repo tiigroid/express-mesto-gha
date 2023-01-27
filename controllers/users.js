@@ -8,9 +8,13 @@ module.exports.getAllUsers = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-  User.findById(req.params.userId)
-    .then((user) => (user ? res.send(user) : sendUserNotFound(res)))
-    .catch(() => sendServerError(res));
+  if (req.params.userId.length === 24) {
+    User.findById(req.params.userId)
+      .then((user) => (user ? res.send(user) : sendUserNotFound(res)))
+      .catch(() => sendServerError(res));
+  } else {
+    sendBadRequest(res);
+  }
 };
 
 module.exports.addUser = (req, res) => {
