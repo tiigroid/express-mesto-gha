@@ -1,5 +1,10 @@
 const Card = require('../models/card');
-const { sendBadRequest, sendCardNotFound, sendServerError } = require('../utils/errors');
+const {
+  sendBadRequest,
+  sendCardNotFound,
+  sendServerError,
+  sendBadId,
+} = require('../utils/errors');
 
 module.exports.getAllCards = (req, res) => {
   Card.find({})
@@ -16,13 +21,9 @@ module.exports.addCard = (req, res) => {
 };
 
 module.exports.deleteCardById = (req, res) => {
-  if (req.params.cardId.length === 24) {
-    Card.findByIdAndRemove(req.params.cardId)
-      .then((card) => (card ? res.send(card) : sendCardNotFound(res)))
-      .catch(() => sendServerError(res));
-  } else {
-    sendBadRequest(res);
-  }
+  Card.findByIdAndRemove(req.params.cardId)
+    .then((card) => (card ? res.send(card) : sendCardNotFound(res)))
+    .catch((err) => (err.name === 'CastError' ? sendBadId(res) : sendServerError(res)));
 };
 
 module.exports.likeCard = (req, res) => {

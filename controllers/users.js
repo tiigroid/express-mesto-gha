@@ -1,5 +1,10 @@
 const User = require('../models/user');
-const { sendBadRequest, sendUserNotFound, sendServerError } = require('../utils/errors');
+const {
+  sendBadRequest,
+  sendUserNotFound,
+  sendServerError,
+  sendBadId,
+} = require('../utils/errors');
 
 module.exports.getAllUsers = (req, res) => {
   User.find({})
@@ -8,13 +13,9 @@ module.exports.getAllUsers = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-  if (req.params.userId.length === 24) {
-    User.findById(req.params.userId)
-      .then((user) => (user ? res.send(user) : sendUserNotFound(res)))
-      .catch(() => sendServerError(res));
-  } else {
-    sendBadRequest(res);
-  }
+  User.findById(req.params.userId)
+    .then((user) => (user ? res.send(user) : sendUserNotFound(res)))
+    .catch((err) => (err.name === 'CastError' ? sendBadId(res) : sendServerError(res)));
 };
 
 module.exports.addUser = (req, res) => {
@@ -25,10 +26,21 @@ module.exports.addUser = (req, res) => {
 };
 
 module.exports.editUserInfo = (req, res) => {
-  const { name, about, avatar } = req.body;
+  const { name, about } = req.body;
   User.findOneAndUpdate(
     { _id: req.user._id },
-    { name, about, avatar },
+    { name, about },
+    { new: true, runValidators: true },
+  )
+    .then((user) => (user ? res.send(user) : sendUserNotFound(res)))
+    .catch((err) => (err.name === 'ValidationError' ? sendBadRequest(res) : sendServerError(res)));
+};
+
+module.exports.editUserAvatar = (req, res) => {
+  const { avatar } = req.body;
+  User.findOneAndUpdate(
+    { _id: req.user._id },
+    { avatar },
     { new: true, runValidators: true },
   )
     .then((user) => (user ? res.send(user) : sendUserNotFound(res)))
