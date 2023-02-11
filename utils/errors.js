@@ -1,10 +1,17 @@
-const BAD_REQUEST = 400;
-const NOT_FOUND = 404;
-const SERVER_ERROR = 500;
+module.exports.authorizationError = (message) => {
+  const err = new Error(message);
+  err.statusCode = 401;
+  return err;
+};
 
-module.exports.sendBadRequest = (res) => res.status(BAD_REQUEST).send({ message: 'Неверный формат данных' });
-module.exports.sendBadId = (res) => res.status(BAD_REQUEST).send({ message: 'Неверный формат ID' });
-module.exports.sendUserNotFound = (res) => res.status(NOT_FOUND).send({ message: 'Пользователь не найден' });
-module.exports.sendCardNotFound = (res) => res.status(NOT_FOUND).send({ message: 'Карточка не найдена' });
-module.exports.sendPathNotFound = (res) => res.status(NOT_FOUND).send({ message: 'Путь не найден' });
-module.exports.sendServerError = (res) => res.status(SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+module.exports.forbiddenError = (message) => {
+  const err = new Error(message);
+  err.statusCode = 403;
+  return err;
+};
+
+module.exports.notFoundError = (message) => {
+  const err = new Error(message);
+  err.statusCode = 404;
+  return err;
+};
