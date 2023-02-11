@@ -24,7 +24,11 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    .then((user) => res.send(user))
+    .then(() => res.send(
+      {
+        name, about, avatar, email,
+      },
+    ))
     .catch((err) => (err.code === 11000 ? next({ statusCode: 409, message: 'Пользователь с таким email уже существует' }) : next(err)));
 };
 
@@ -61,12 +65,12 @@ module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   function handleAuthorizationError() {
-    return next(authorizationError('Неправильные почта или пароль'));
+    throw authorizationError('Неправильные почта или пароль');
   }
 
   function createToken(user) {
     const token = jwt.sign({ _id: user._id }, '6010553b2d9477d710920b4605b28a67', { expiresIn: '7d' });
-    res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true }).end();
+    res.cookie('jwt', token, { maxAge: 3600000 * 24 * 7, httpOnly: true }).send({ email, password });
   }
 
   User.findOne({ email }).select('+password')
@@ -78,5 +82,6 @@ module.exports.login = (req, res, next) => {
           .then((matched) => (matched ? createToken(user) : handleAuthorizationError()))
           .catch(next);
       }
-    });
+    })
+    .catch(next);
 };
