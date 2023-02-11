@@ -3,7 +3,7 @@ const { notFoundError, forbiddenError } = require('../utils/errors');
 
 module.exports.getAllCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => (cards.length > 0 ? res.send(cards) : Promise.reject(notFoundError('Список карточек пуст'))))
+    .then((cards) => (res.send(cards)))
     .catch(next);
 };
 
