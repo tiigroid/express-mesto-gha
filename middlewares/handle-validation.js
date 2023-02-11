@@ -10,7 +10,7 @@ module.exports.validateSignIn = () => celebrate({
 module.exports.validateSignUp = () => celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30).default('Жак-Ив Кусто'),
-    about: Joi.string().min(2).max(30).default('Исследователь океана'),
+    about: Joi.string().min(2).max(30).default('Исследователь'),
     avatar:
       Joi.string()
         .pattern(/^https?:\/\/(www\.)?[a-z0-9@:%._+~#=-]+\.[a-z]+\/?(?:[a-z0-9-._~:/?#[\]@!$&'()*+,;=-]*)$/i)
