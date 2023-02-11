@@ -25,8 +25,9 @@ module.exports.deleteCardById = (req, res, next) => {
         throw forbiddenError('Ошибка доступа');
       }
 
-      return Card.findByIdAndRemove(req.params.cardId)
-        .then((validCard) => (validCard && res.send(validCard)));
+      Card.findByIdAndRemove(req.params.cardId)
+        .then((validCard) => (validCard && res.send(validCard)))
+        .catch(next);
     })
     .catch(next);
 };
