@@ -1,17 +1,20 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { authorizationError, notFoundError } = require('../utils/errors');
+const AuthorizationError = require('../utils/errors/AuthorizationError');
+const NotFoundError = require('../utils/errors/NotFoundError');
+const BadRequestError = require('../utils/errors/BadRequestError');
+const ConflictingRequestError = require('../utils/errors/ConflictingRequestError');
 
 module.exports.getAllUsers = (req, res, next) => {
   User.find({})
-    .then((users) => (users.length > 0 ? res.send(users) : Promise.reject(notFoundError('Список пользователей пуст'))))
+    .then((users) => (res.send(users)))
     .catch(next);
 };
 
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
-    .then((user) => (user ? res.send(user) : Promise.reject(notFoundError('Пользователь не найден'))))
+    .then((user) => (user ? res.send(user) : Promise.reject(new NotFoundError('Пользователь не найден'))))
     .catch(next);
 };
 
@@ -24,12 +27,20 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    .then(() => res.send(
+    .then((user) => res.send(
       {
-        name, about, avatar, email,
+        name: user.name, about: user.about, avatar: user.avatar, email,
       },
     ))
-    .catch((err) => (err.code === 11000 ? next({ statusCode: 409, message: 'Пользователь с таким email уже существует' }) : next(err)));
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new ConflictingRequestError('Пользователь с таким email уже существует'));
+      }
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Введены неверные данные'));
+      }
+      next(err);
+    });
 };
 
 module.exports.getUserInfo = (req, res, next) => {
@@ -44,28 +55,29 @@ module.exports.editUserInfo = (req, res, next) => {
   User.findOneAndUpdate(
     { _id: req.user._id },
     { name, about },
-    { new: true },
+    { new: true, runValidators: true },
   )
     .then((user) => res.send(user))
-    .catch(next);
+    .catch((err) => (err.name === 'ValidationError' ? next(new BadRequestError('Введены неверные данные')) : next(err)));
 };
 
 module.exports.editUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
+
   User.findOneAndUpdate(
     { _id: req.user._id },
     { avatar },
-    { new: true },
+    { new: true, runValidators: true },
   )
     .then((user) => res.send(user))
-    .catch(next);
+    .catch((err) => (err.name === 'ValidationError' ? next(new BadRequestError('Введены неверные данные')) : next(err)));
 };
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   function handleAuthorizationError() {
-    throw authorizationError('Неправильные почта или пароль');
+    throw new AuthorizationError('Неправильные почта или пароль');
   }
 
   function createToken(user) {
@@ -83,5 +95,10 @@ module.exports.login = (req, res, next) => {
           .catch(next);
       }
     })
+    .catch(next);
+};
+
+module.exports.logout = (req, res, next) => {
+  res.clearCookie('jwt').send({ message: 'Выход' })
     .catch(next);
 };

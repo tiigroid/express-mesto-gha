@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const { urlPattern } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema(
   {
@@ -20,7 +21,7 @@ const userSchema = new mongoose.Schema(
       default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
       validate: {
         validator(v) {
-          return /^https?:\/\/(www\.)?[a-z0-9@:%._+~#=-]+\.[a-z]+\/?(?:[a-z0-9-._~:/?#[\]@!$&'()*+,;=-]*)$/i.test(v);
+          return urlPattern.test(v);
         },
         message: 'Некорректный URL',
       },

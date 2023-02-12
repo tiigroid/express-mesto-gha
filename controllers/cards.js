@@ -1,5 +1,7 @@
 const Card = require('../models/card');
-const { notFoundError, forbiddenError } = require('../utils/errors');
+const NotFoundError = require('../utils/errors/NotFoundError');
+const ForbiddenError = require('../utils/errors/ForbiddenError');
+const BadRequestError = require('../utils/errors/BadRequestError');
 
 module.exports.getAllCards = (req, res, next) => {
   Card.find({})
@@ -12,17 +14,17 @@ module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner })
     .then((card) => res.send(card))
-    .catch(next);
+    .catch((err) => (err.name === 'ValidationError' ? next(new BadRequestError('Введены неверные данные')) : next(err)));
 };
 
 module.exports.deleteCardById = (req, res, next) => {
   Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        throw notFoundError('Карточка не найдена');
+        throw new NotFoundError('Карточка не найдена');
       }
       if (card.owner.toString() !== req.user._id) {
-        throw forbiddenError('Ошибка доступа');
+        throw new ForbiddenError('Ошибка доступа');
       }
 
       Card.findByIdAndRemove(req.params.cardId)
@@ -34,12 +36,12 @@ module.exports.deleteCardById = (req, res, next) => {
 
 module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true })
-    .then((card) => (card ? res.send(card) : Promise.reject(notFoundError('Карточка не найдена'))))
+    .then((card) => (card ? res.send(card) : Promise.reject(new NotFoundError('Карточка не найдена'))))
     .catch(next);
 };
 
 module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .then((card) => (card ? res.send(card) : Promise.reject(notFoundError('Карточка не найдена'))))
+    .then((card) => (card ? res.send(card) : Promise.reject(new NotFoundError('Карточка не найдена'))))
     .catch(next);
 };
